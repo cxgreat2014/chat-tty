@@ -1,7 +1,14 @@
 [package]
-name = "chatgpt-repl"
+name = "chat-tty"
 version = "0.1.0"
 edition = "2021"
+authors = ["Sean Aye <hello@seanaye.ca>"]
+description = "A command-line chatbot for ChatGPT that supports streaming tokens and history"
+homepage = "https://github.com/seanaye/chat-tty"
+repository = "https://github.com/seanaye/chat-tty"
+license = "MIT"
+categories = ["command-line-utilities"]
+keywords = ["chat", "gpt", "repl", "cli"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
