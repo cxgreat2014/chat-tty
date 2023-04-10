@@ -136,7 +136,7 @@ impl Client {
 
         let res = self.client.post(url).json(&payload).send().await?;
         if res.status() != 200 {
-            println!("Status: {}", res.status());
+            return Err(anyhow::anyhow!("Status: {}", res.status()))
         }
         let bytes = res.bytes_stream();
 
