@@ -126,7 +126,7 @@ impl Client {
 
     pub async fn complete_chat(&self, messages: Vec<MessageJson>) -> anyhow::Result<impl Stream<Item = Response>> {
         let payload = Payload {
-            model: "gpt-3.5-turbo".into(),
+            model: "gpt-4".into(),
             messages,
             stream: true
         };
