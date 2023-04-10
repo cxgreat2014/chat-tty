@@ -29,9 +29,11 @@ impl Storage {
 
     pub fn load_history(&mut self) {
         self.ensure_app_dir();
-        self.rl
-            .load_history(&self.history_txt())
-            .unwrap_or_else(|e| println!("{:?}", e));
+
+        match self.rl.load_history(&self.history_txt()) {
+            Ok(_) => println!("History loaded. Use arrow keys to navigate history."),
+            Err(_) => println!("No history file found, creating a new one."),
+        }
     }
 
     pub fn write_history(&mut self) {
