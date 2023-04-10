@@ -29,12 +29,16 @@ impl Storage {
 
     pub fn load_history(&mut self) {
         self.ensure_app_dir();
-        self.rl.load_history(&self.history_txt());
+        self.rl
+            .load_history(&self.history_txt())
+            .unwrap_or_else(|e| println!("{:?}", e));
     }
 
     pub fn write_history(&mut self) {
         self.ensure_app_dir();
 
-        self.rl.save_history(&self.history_txt());
+        self.rl
+            .save_history(&self.history_txt())
+            .unwrap_or_else(|e| println!("{:?}", e));
     }
 }

@@ -39,7 +39,6 @@ impl Messages {
 
     async fn append_from_stream(&mut self, s: &mut Pin<&mut impl Stream<Item = Response>>) {
         while let Some(x) = s.next().await {
-            // dbg!(&x);
             match x {
                 Response::BeginResponse { role, response_index: _ } => {
                     self.messages.push(Message::InProgress(IncompleteMessage {
@@ -53,7 +52,6 @@ impl Messages {
                     print!("{}", delta.cyan());
                     std::io::stdout().flush().unwrap();
                     
-                    // dbg!(&delta);
                     match end {
                         Message::Complete(_) => panic!("Attempted to append to completed message"),
                         Message::InProgress(m) => {
@@ -71,14 +69,6 @@ impl Messages {
                 _ => {}
             }
         }
-        // for r in s {
-        //     match r {
-        //         Response::BeginResponse { role, response_index } => {
-
-        //         }
-        //     }
-        //     self.messages.push(message);
-        // }
     }
 }
 
@@ -92,7 +82,7 @@ enum Message {
 struct CompleteMessage {
         direction: Role,
         text: String,
-        time: i32
+        _time: i32
 }
 
 #[derive(Debug, Clone)]
@@ -108,7 +98,7 @@ impl From<Message> for CompleteMessage {
             Message::InProgress(i) => Self {
             direction: i.direction,
             text: i.partial_text,
-            time: time(),
+            _time: time(),
         }
         }
         
@@ -144,7 +134,7 @@ impl AppState {
         let message = Message::Complete(CompleteMessage{
             direction: Role::User,
             text,
-            time: time(),
+            _time: time(),
         });
         self.messages.messages.push(message);
         self.sync_server_state().await
@@ -152,7 +142,7 @@ impl AppState {
 
     async fn sync_server_state(&mut self) -> anyhow::Result<()> {
         let payload = self.messages.to_payload();
-        let c = self.client.as_mut().unwrap();
+        let c = self.client.as_mut().expect("Unable to get client, has the state been properly initialized?");
         let mut stream = c.complete_chat(payload).await?;
         let mut pin = Pin::new(&mut stream);
         self.messages.append_from_stream(&mut pin).await;

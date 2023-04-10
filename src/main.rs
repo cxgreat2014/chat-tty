@@ -53,7 +53,6 @@ async fn main() -> Result<()> {
                     println!("{:?}", e);
                     false
                 });
-                // println!("Line: {}", line);
                 state.add_message(line).await.unwrap_or_else(|e| {
                     println!("{:?}", e);
                 });
