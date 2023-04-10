@@ -134,8 +134,11 @@ impl Client {
         let url = self.base.join("/v1/chat/completions")?;
         
 
-        let res = self.client.post(url).json(&payload).send().await;
-        let bytes = res?.bytes_stream();
+        let res = self.client.post(url).json(&payload).send().await?;
+        if res.status() != 200 {
+            println!("Status: {}", res.status());
+        }
+        let bytes = res.bytes_stream();
 
         let stream = bytes.eventsource().map(move |part| -> Response {
             let chunk = &part.expect("Stream closed abruptly").data;
