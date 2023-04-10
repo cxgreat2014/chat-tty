@@ -1,6 +1,6 @@
 [package]
 name = "chat-tty"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 authors = ["Sean Aye <hello@seanaye.ca>"]
 description = "A command-line chatbot for ChatGPT that supports streaming tokens and history"
