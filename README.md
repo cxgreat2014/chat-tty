@@ -2,7 +2,7 @@ The content of this readme was assisted by chat-tty
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust Version](https://img.shields.io/badge/Rust%20Version-Latest-brightgreen.svg)](https://www.rust-lang.org/)
-![Crates.io](https://img.shields.io/crates/d/chat-gpt-streamer)
+![Crates.io](https://img.shields.io/crates/d/chat-tty)
 
 
 # chat-tty
