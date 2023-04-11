@@ -1,8 +1,9 @@
 The content of this readme was assisted by chat-tty
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust Version](https://img.shields.io/badge/Rust%20Version-Latest-brightgreen.svg)](https://www.rust-lang.org/)
+![Crates.io](https://img.shields.io/crates/l/chat-tty)
 ![Crates.io](https://img.shields.io/crates/d/chat-tty)
+![Crates.io](https://img.shields.io/crates/v/chat-tty)
 
 
 # chat-tty
