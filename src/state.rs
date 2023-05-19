@@ -42,7 +42,7 @@ impl Messages {
         Self { messages: vec![] }
     }
 
-    async fn append_from_stream(&mut self, s: &mut Pin<&mut impl Stream<Item = Response>>) {
+    async fn append_from_stream(&mut self, s: &mut Pin<&mut impl Stream<Item=Response>>) {
         while let Some(x) = s.next().await {
             match x {
                 Response::BeginResponse {
@@ -124,9 +124,9 @@ fn time() -> i32 {
 }
 
 impl AppState {
-    pub fn new(api_key: Option<&str>) -> Self {
+    pub fn new(base: Option<&str>, api_key: Option<&str>) -> Self {
         Self {
-            client: api_key.and_then(|k| Client::new(k).ok()),
+            client: base.and_then(|b| api_key.and_then(|k| Client::new(b, k).ok())),
             messages: Messages::new(),
         }
     }
@@ -136,7 +136,7 @@ impl AppState {
     }
 
     pub fn set_api_key(&mut self, api_key: &str) {
-        let client = Client::new(api_key).ok();
+        let client = Client::new("https://api.openai.com", api_key).ok();
         self.client = client;
     }
 

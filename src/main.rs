@@ -8,7 +8,8 @@ use rustyline::Result;
 use state::AppState;
 use storage::Storage;
 
-const API_KEY: &str = "OPENAI_KEY";
+const BASE: &str = "OPENAI_API_BASE";
+const API_KEY: &str = "OPENAI_API_KEY";
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -16,9 +17,10 @@ async fn main() -> Result<()> {
 
     storage.load_history();
 
+    let base = std::env::var(BASE).ok();
     let key = std::env::var(API_KEY).ok();
 
-    let mut state = AppState::new(key.as_deref());
+    let mut state = AppState::new(base.as_deref(), key.as_deref());
 
     while !state.is_ready() {
         println!("Please enter your OpenAI API key:");

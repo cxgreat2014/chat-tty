@@ -15,15 +15,15 @@ pub struct MessageJson {
 }
 
 #[derive(Debug, Serialize)]
-struct Payload {
-    model: String,
-    messages: Vec<MessageJson>,
-    stream: bool,
+pub struct Payload {
+    pub model: String,
+    pub messages: Vec<MessageJson>,
+    pub stream: bool,
 }
 
 pub struct Client {
-    base: reqwest::Url,
-    client: reqwest::Client,
+    pub base: reqwest::Url,
+    pub client: reqwest::Client,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
@@ -108,7 +108,7 @@ pub enum Response {
 }
 
 impl Client {
-    pub fn new(api_key: &str) -> anyhow::Result<Self> {
+    pub fn new(base: &str, api_key: &str) -> anyhow::Result<Self> {
         let mut headers = header::HeaderMap::new();
         let mut auth_value = header::HeaderValue::from_str(&format!("Bearer {}", api_key))?;
         auth_value.set_sensitive(true);
@@ -117,7 +117,7 @@ impl Client {
             .default_headers(headers)
             .build()?;
 
-        let base = reqwest::Url::parse("https://api.openai.com")?;
+        let base = reqwest::Url::parse(base)?;
 
         Ok(Self { client, base })
     }
