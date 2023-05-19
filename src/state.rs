@@ -1,10 +1,16 @@
 use colored::Colorize;
-use std::io::Write;
 use futures::stream::StreamExt;
-use std::{time::{SystemTime, UNIX_EPOCH}, pin::Pin};
 use futures::Stream;
+use std::io::Write;
+use std::{
+    pin::Pin,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
-use crate::{client::{Role, Response}, client::{Client, MessageJson}};
+use crate::{
+    client::{Client, MessageJson},
+    client::{Response, Role},
+};
 
 #[non_exhaustive]
 pub struct AppState {
@@ -12,25 +18,24 @@ pub struct AppState {
     messages: Messages,
 }
 
-
 struct Messages {
     messages: Vec<Message>,
 }
 
 impl Messages {
     fn to_payload(&self) -> Vec<MessageJson> {
-        self.messages.iter().filter_map(|m| {
-            match m {
+        self.messages
+            .iter()
+            .filter_map(|m| match m {
                 Message::InProgress(_) => None,
-                Message::Complete(m) => Some(MessageJson{
+                Message::Complete(m) => Some(MessageJson {
                     content: m.text.clone(),
-                    role: m.direction.to_string()
-                })
-            }
-        }).collect()
+                    role: m.direction.to_string(),
+                }),
+            })
+            .collect()
     }
 }
-
 
 impl Messages {
     pub fn new() -> Self {
@@ -40,32 +45,38 @@ impl Messages {
     async fn append_from_stream(&mut self, s: &mut Pin<&mut impl Stream<Item = Response>>) {
         while let Some(x) = s.next().await {
             match x {
-                Response::BeginResponse { role, response_index: _ } => {
+                Response::BeginResponse {
+                    role,
+                    response_index: _,
+                } => {
                     self.messages.push(Message::InProgress(IncompleteMessage {
                         direction: role,
-                        partial_text: "".into()
+                        partial_text: "".into(),
                     }));
-                },
-                Response::Content { delta, response_index: _ } => {
+                }
+                Response::Content {
+                    delta,
+                    response_index: _,
+                } => {
                     let last_idx = self.messages.len() - 1;
                     let end = self.messages.get_mut(last_idx).unwrap();
                     print!("{}", delta.cyan());
                     std::io::stdout().flush().unwrap();
-                    
+
                     match end {
                         Message::Complete(_) => panic!("Attempted to append to completed message"),
                         Message::InProgress(m) => {
                             m.partial_text.push_str(&delta);
                         }
                     }
-                },
+                }
                 Response::Done => {
                     let last_idx = self.messages.len() - 1;
                     let end = self.messages.get_mut(last_idx).unwrap();
                     let complete: CompleteMessage = end.clone().into();
                     *end = Message::Complete(complete);
                     println!("\n");
-                },
+                }
                 _ => {}
             }
         }
@@ -80,15 +91,15 @@ enum Message {
 
 #[derive(Debug, Clone)]
 struct CompleteMessage {
-        direction: Role,
-        text: String,
-        _time: i32
+    direction: Role,
+    text: String,
+    _time: i32,
 }
 
 #[derive(Debug, Clone)]
 struct IncompleteMessage {
-        direction: Role,
-        partial_text: String,
+    direction: Role,
+    partial_text: String,
 }
 
 impl From<Message> for CompleteMessage {
@@ -96,22 +107,21 @@ impl From<Message> for CompleteMessage {
         match m {
             Message::Complete(c) => c,
             Message::InProgress(i) => Self {
-            direction: i.direction,
-            text: i.partial_text,
-            _time: time(),
+                direction: i.direction,
+                text: i.partial_text,
+                _time: time(),
+            },
         }
-        }
-        
     }
 }
 
 fn time() -> i32 {
     let start = SystemTime::now();
-    let since_the_epoch = start.duration_since(UNIX_EPOCH).expect("Time went backwards");
+    let since_the_epoch = start
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards");
     since_the_epoch.as_secs() as i32
-
 }
-
 
 impl AppState {
     pub fn new(api_key: Option<&str>) -> Self {
@@ -131,7 +141,7 @@ impl AppState {
     }
 
     pub async fn add_message(&mut self, text: String) -> anyhow::Result<()> {
-        let message = Message::Complete(CompleteMessage{
+        let message = Message::Complete(CompleteMessage {
             direction: Role::User,
             text,
             _time: time(),
@@ -142,7 +152,10 @@ impl AppState {
 
     async fn sync_server_state(&mut self) -> anyhow::Result<()> {
         let payload = self.messages.to_payload();
-        let c = self.client.as_mut().expect("Unable to get client, has the state been properly initialized?");
+        let c = self
+            .client
+            .as_mut()
+            .expect("Unable to get client, has the state been properly initialized?");
         let mut stream = c.complete_chat(payload).await?;
         let mut pin = Pin::new(&mut stream);
         self.messages.append_from_stream(&mut pin).await;

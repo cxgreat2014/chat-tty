@@ -14,7 +14,6 @@ pub struct MessageJson {
     pub content: String,
 }
 
-
 #[derive(Debug, Serialize)]
 struct Payload {
     model: String,
@@ -60,7 +59,6 @@ impl FromStr for Role {
     }
 }
 
-
 #[derive(Debug, Deserialize)]
 pub struct InboundResponseChunk {
     /// All message chunks in this response part (only one usually)
@@ -83,7 +81,6 @@ pub enum InboundChunkPayload {
     AnnounceRoles {
         /// The announced role
         role: String,
-
     },
     /// Streams a part of message content
     StreamContent {
@@ -105,9 +102,9 @@ pub enum Response {
         response_index: usize,
     },
     CloseResponse {
-        response_index: usize
+        response_index: usize,
     },
-    Done
+    Done,
 }
 
 impl Client {
@@ -116,56 +113,61 @@ impl Client {
         let mut auth_value = header::HeaderValue::from_str(&format!("Bearer {}", api_key))?;
         auth_value.set_sensitive(true);
         headers.insert(header::AUTHORIZATION, auth_value);
-        let client = reqwest::Client::builder().default_headers(headers).build()?;
+        let client = reqwest::Client::builder()
+            .default_headers(headers)
+            .build()?;
 
         let base = reqwest::Url::parse("https://api.openai.com")?;
-
 
         Ok(Self { client, base })
     }
 
-    pub async fn complete_chat(&self, messages: Vec<MessageJson>) -> anyhow::Result<impl Stream<Item = Response>> {
+    pub async fn complete_chat(
+        &self,
+        messages: Vec<MessageJson>,
+    ) -> anyhow::Result<impl Stream<Item = Response>> {
         let payload = Payload {
             model: "gpt-4".into(),
             messages,
-            stream: true
+            stream: true,
         };
 
         let url = self.base.join("/v1/chat/completions")?;
-        
 
         let res = self.client.post(url).json(&payload).send().await?;
         if res.status() != 200 {
-            return Err(anyhow::anyhow!("Status: {}", res.status()))
+            return Err(anyhow::anyhow!("Status: {}", res.status()));
         }
         let bytes = res.bytes_stream();
 
         let stream = bytes.eventsource().map(move |part| -> Response {
             let chunk = &part.expect("Stream closed abruptly").data;
-            
+
             if chunk == "[DONE]" {
                 return Response::Done;
             }
             let data: InboundResponseChunk = serde_json::from_str(chunk).expect("Invalid JSON");
-            let choice = data.choices.first().expect("No choices in response").to_owned();
+            let choice = data
+                .choices
+                .first()
+                .expect("No choices in response")
+                .to_owned();
 
             match choice.delta {
                 InboundChunkPayload::AnnounceRoles { role } => Response::BeginResponse {
                     role: Role::from_str(&role).expect("Invalid role"),
-                    response_index: choice.index
+                    response_index: choice.index,
                 },
                 InboundChunkPayload::StreamContent { content } => Response::Content {
                     delta: content,
-                    response_index: choice.index
+                    response_index: choice.index,
                 },
                 InboundChunkPayload::Close {} => Response::CloseResponse {
-                    response_index: choice.index
-                }
+                    response_index: choice.index,
+                },
             }
-
         });
-        
+
         Ok(stream)
     }
 }
-

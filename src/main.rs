@@ -2,6 +2,7 @@ mod client;
 mod errors;
 mod state;
 mod storage;
+
 use rustyline::error::ReadlineError;
 use rustyline::Result;
 use state::AppState;
@@ -13,7 +14,6 @@ const API_KEY: &str = "OPENAI_KEY";
 async fn main() -> Result<()> {
     let mut storage = Storage::new();
 
-
     storage.load_history();
 
     let key = std::env::var(API_KEY).ok();
@@ -24,10 +24,13 @@ async fn main() -> Result<()> {
         println!("Please enter your OpenAI API key:");
         match storage.rl.readline(">> ") {
             Ok(line) => {
-                storage.rl.add_history_entry(line.as_str()).unwrap_or_else(|e| {
-                    println!("{:?}", e);
-                    false
-                });
+                storage
+                    .rl
+                    .add_history_entry(line.as_str())
+                    .unwrap_or_else(|e| {
+                        println!("{:?}", e);
+                        false
+                    });
                 state.set_api_key(line.as_str());
             }
             Err(ReadlineError::Interrupted) => {
@@ -49,14 +52,16 @@ async fn main() -> Result<()> {
         let readline = storage.rl.readline(">> ");
         match readline {
             Ok(line) => {
-                storage.rl.add_history_entry(line.as_str()).unwrap_or_else(|e| {
-                    println!("{:?}", e);
-                    false
-                });
+                storage
+                    .rl
+                    .add_history_entry(line.as_str())
+                    .unwrap_or_else(|e| {
+                        println!("{:?}", e);
+                        false
+                    });
                 state.add_message(line).await.unwrap_or_else(|e| {
                     println!("{:?}", e);
                 });
-            
             }
             Err(ReadlineError::Interrupted) => {
                 println!("CTRL-C");
@@ -73,6 +78,6 @@ async fn main() -> Result<()> {
         }
     }
     storage.write_history();
-    
+
     Ok(())
 }
